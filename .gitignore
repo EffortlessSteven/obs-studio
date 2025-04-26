@@ -79,7 +79,7 @@ compile_commands.json
 /build_*/ # Covers build_x64, build_x86 etc.
 /out/
 
-# Also exclude build directories anywhere in the project tree
+# Exclude build directories anywhere in the project tree
 **/build/
 **/out/
 **/dist/
