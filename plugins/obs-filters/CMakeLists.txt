@@ -20,6 +20,7 @@ target_sources(
     hdr-tonemap-filter.c
     invert-audio-polarity.c
     limiter-filter.c
+    limiter-v2-filter.c
     luma-key-filter.c
     mask-filter.c
     noise-gate-filter.c
