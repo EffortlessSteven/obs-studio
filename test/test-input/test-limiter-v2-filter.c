@@ -13,7 +13,7 @@
 #include <obs-module.h>
 #include <obs-data.h>
 #include <obs-source.h>
-#include <obs-properties.h> // Needed for obs_properties_get, obs_property_modified
+#include <obs-properties.h>    // Needed for obs_properties_get, obs_property_modified
 #include <media-io/audio-io.h> // For audio_output_info
 #include <util/platform.h>
 #include <util/dstr.h>
@@ -23,7 +23,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <assert.h> // For basic assertions
+#include <assert.h>   // For basic assertions
 #include <inttypes.h> // For PRIu64 format specifier
 
 // --- Test Configuration ---
@@ -73,7 +73,6 @@ extern struct obs_source_info limiter_v2_filter;
 
 // Maximum number of audio channels to allocate
 #define MAX_AUDIO_CHANNELS              8
-
 
 // Simple log handler for test output
 static void test_log_handler(int log_level, const char *format, va_list args, void *param)
@@ -168,12 +167,18 @@ static void test_limiter_defaults(bool *test_passed)
 
 	// Verify key default values
 	ASSERT_EQUAL_STR(obs_data_get_string(settings, S_PRESET), PRESET_VAL_DEFAULT, "Default preset correct");
-	ASSERT_EQUAL_DBL(obs_data_get_double(settings, S_FILTER_THRESHOLD), DEFAULT_THRESHOLD_DB, 0.01, "Default threshold correct");
-	ASSERT_EQUAL_DBL(obs_data_get_double(settings, S_RELEASE_TIME), DEFAULT_RELEASE_MS, 0.01, "Default release correct");
-	ASSERT_TRUE(obs_data_get_bool(settings, S_LOOKAHEAD_ENABLED) == DEFAULT_LOOKAHEAD_ENABLED, "Default lookahead enabled correct");
-	ASSERT_EQUAL_DBL(obs_data_get_double(settings, S_LOOKAHEAD_TIME_MS), DEFAULT_LOOKAHEAD_MS, 0.01, "Default lookahead time correct");
-	ASSERT_TRUE(obs_data_get_bool(settings, S_ADAPTIVE_RELEASE_ENABLED) == DEFAULT_ADAPTIVE_RELEASE, "Default adaptive release correct");
-	ASSERT_TRUE(obs_data_get_bool(settings, S_TRUE_PEAK_ENABLED) == DEFAULT_TRUE_PEAK_ENABLED, "Default true peak correct");
+	ASSERT_EQUAL_DBL(obs_data_get_double(settings, S_FILTER_THRESHOLD), DEFAULT_THRESHOLD_DB, 0.01,
+			 "Default threshold correct");
+	ASSERT_EQUAL_DBL(obs_data_get_double(settings, S_RELEASE_TIME), DEFAULT_RELEASE_MS, 0.01,
+			 "Default release correct");
+	ASSERT_TRUE(obs_data_get_bool(settings, S_LOOKAHEAD_ENABLED) == DEFAULT_LOOKAHEAD_ENABLED,
+		    "Default lookahead enabled correct");
+	ASSERT_EQUAL_DBL(obs_data_get_double(settings, S_LOOKAHEAD_TIME_MS), DEFAULT_LOOKAHEAD_MS, 0.01,
+			 "Default lookahead time correct");
+	ASSERT_TRUE(obs_data_get_bool(settings, S_ADAPTIVE_RELEASE_ENABLED) == DEFAULT_ADAPTIVE_RELEASE,
+		    "Default adaptive release correct");
+	ASSERT_TRUE(obs_data_get_bool(settings, S_TRUE_PEAK_ENABLED) == DEFAULT_TRUE_PEAK_ENABLED,
+		    "Default true peak correct");
 
 	obs_data_release(settings);
 }
@@ -187,7 +192,7 @@ static void test_limiter_update(bool *test_passed)
 	obs_source_t *filter = obs_source_create_private(limiter_v2_filter.id, "Test Update", settings);
 	ASSERT_NOT_NULL(filter, "limiter_v2_create succeeded");
 
-	if(filter) {
+	if (filter) {
 		// Modify settings AFTER create
 		obs_data_set_double(settings, S_FILTER_THRESHOLD, -15.5);
 		obs_data_set_double(settings, S_RELEASE_TIME, 150.0);
@@ -217,11 +222,11 @@ static void test_limiter_presets(bool *test_passed)
 	obs_source_t *filter = obs_source_create_private(limiter_v2_filter.id, "Test Presets", settings);
 	ASSERT_NOT_NULL(filter, "limiter_v2_create succeeded");
 
-	if(filter) {
+	if (filter) {
 		obs_properties_t *props = obs_source_properties(filter);
 		ASSERT_NOT_NULL(props, "obs_source_properties succeeded");
 
-		if(props) {
+		if (props) {
 			// Simulate selecting the "Podcast" preset
 			printf("   INFO: Simulating selecting Podcast preset...\n");
 			obs_data_set_string(settings, S_PRESET, PRESET_VAL_PODCAST);
@@ -236,9 +241,12 @@ static void test_limiter_presets(bool *test_passed)
 			}
 
 			// Check settings object immediately after callback simulation
-			ASSERT_EQUAL_DBL(obs_data_get_double(settings, S_FILTER_THRESHOLD), -8.0, 0.01, "Podcast preset threshold applied");
-			ASSERT_EQUAL_DBL(obs_data_get_double(settings, S_RELEASE_TIME), 80.0, 0.01, "Podcast preset release applied");
-			ASSERT_TRUE(obs_data_get_bool(settings, S_LOOKAHEAD_ENABLED), "Podcast preset lookahead enabled applied");
+			ASSERT_EQUAL_DBL(obs_data_get_double(settings, S_FILTER_THRESHOLD), -8.0, 0.01,
+					 "Podcast preset threshold applied");
+			ASSERT_EQUAL_DBL(obs_data_get_double(settings, S_RELEASE_TIME), 80.0, 0.01,
+					 "Podcast preset release applied");
+			ASSERT_TRUE(obs_data_get_bool(settings, S_LOOKAHEAD_ENABLED),
+				    "Podcast preset lookahead enabled applied");
 
 			// Simulate manually changing a setting after selecting preset
 			printf("   INFO: Simulating manual change after preset...\n");
@@ -248,13 +256,15 @@ static void test_limiter_presets(bool *test_passed)
 			obs_property_t *output_gain_prop = obs_properties_get(props, S_OUTPUT_GAIN);
 			ASSERT_NOT_NULL(output_gain_prop, "Got output gain property handle");
 			if (output_gain_prop) {
-				obs_property_modified(output_gain_prop, settings); // Triggers parameter_modified_callback
+				obs_property_modified(output_gain_prop,
+						      settings); // Triggers parameter_modified_callback
 			} else {
 				*test_passed = false;
 			}
 
 			// Check if preset in settings object switched back to "Custom"
-			ASSERT_EQUAL_STR(obs_data_get_string(settings, S_PRESET), PRESET_VAL_CUSTOM, "Preset set to Custom after manual change");
+			ASSERT_EQUAL_STR(obs_data_get_string(settings, S_PRESET), PRESET_VAL_CUSTOM,
+					 "Preset set to Custom after manual change");
 
 			obs_properties_destroy(props);
 		}
@@ -284,7 +294,8 @@ static void test_limiter_process_stability(bool *test_passed)
 
 	filter = obs_source_create_private(limiter_v2_filter.id, "Test Processing Stability", settings);
 	ASSERT_NOT_NULL(filter, "limiter_v2_create succeeded for proc");
-	if (!filter) goto cleanup_proc;
+	if (!filter)
+		goto cleanup_proc;
 
 	// Get filter data pointer using internal helper (use with caution)
 	// Note: This relies on internal OBS structure access. If this fails,
@@ -293,31 +304,33 @@ static void test_limiter_process_stability(bool *test_passed)
 	// and use obs_source_output_audio.
 	void *filter_data_ptr = obs_source_get_filter_data(filter);
 	ASSERT_NOT_NULL(filter_data_ptr, "obs_source_get_filter_data succeeded for proc");
-	if (!filter_data_ptr) goto cleanup_proc;
+	if (!filter_data_ptr)
+		goto cleanup_proc;
 
 	// Get audio parameters from OBS or use test defaults
 	size_t channels = audio_output_get_channels(obs_get_audio());
-	if (channels == 0 || channels > MAX_AUDIO_CHANNELS) channels = TEST_CHANNELS;
+	if (channels == 0 || channels > MAX_AUDIO_CHANNELS)
+		channels = TEST_CHANNELS;
 	uint32_t sample_rate = audio_output_get_sample_rate(obs_get_audio());
-	if (sample_rate == 0) sample_rate = TEST_SAMPLE_RATE;
+	if (sample_rate == 0)
+		sample_rate = TEST_SAMPLE_RATE;
 
 	// Allocate channel buffers
 	for (size_t c = 0; c < channels; ++c) {
 		channel_buffers[c] = bzalloc(sizeof(float) * TEST_BLOCK_SIZE);
 		ASSERT_NOT_NULL(channel_buffers[c], "Audio channel buffer allocated");
-		audio_pointers[c] = (uint8_t*)channel_buffers[c];
+		audio_pointers[c] = (uint8_t *)channel_buffers[c];
 	}
 
 	// Initialize audio data struct using struct literal
-	struct obs_audio_data audio_data = {
-		.frames = TEST_BLOCK_SIZE,
-		.timestamp = os_gettime_ns(),
-		.data = (const uint8_t **)audio_pointers
-	};
+	struct obs_audio_data audio_data = {.frames = TEST_BLOCK_SIZE,
+					    .timestamp = os_gettime_ns(),
+					    .data = (const uint8_t **)audio_pointers};
 
 	// Process several blocks
 	uint32_t blocks_to_process = (uint32_t)(TEST_DURATION_MS * sample_rate) / (TEST_BLOCK_SIZE * 1000);
-	if (blocks_to_process == 0) blocks_to_process = 1; // Ensure at least one block
+	if (blocks_to_process == 0)
+		blocks_to_process = 1; // Ensure at least one block
 
 	for (uint32_t block = 0; block < blocks_to_process; ++block) {
 		// Fill with signal guaranteed to exceed threshold
@@ -340,7 +353,9 @@ static void test_limiter_process_stability(bool *test_passed)
 				if (channel_buffers[c]) {
 					for (uint32_t i = 0; i < TEST_BLOCK_SIZE; ++i) {
 						if (!isfinite(channel_buffers[c][i])) {
-							fprintf(stderr, "  ERROR: NaN/Inf detected in output sample %u, channel %zu\n", i, c);
+							fprintf(stderr,
+								"  ERROR: NaN/Inf detected in output sample %u, channel %zu\n",
+								i, c);
 							*test_passed = false;
 							goto cleanup_proc;
 						}
@@ -384,21 +399,20 @@ static void test_limiter_all_presets(bool *test_passed)
 				double threshold;
 				double release;
 				bool lookahead_enabled;
-			} preset_tests[] = {
-				{PRESET_VAL_DEFAULT, DEFAULT_THRESHOLD_DB, DEFAULT_RELEASE_MS, DEFAULT_LOOKAHEAD_ENABLED},
-				{PRESET_VAL_PODCAST, -8.0, 80.0, true},
-				{PRESET_VAL_STREAMING, -7.0, 70.0, true},
-				{PRESET_VAL_AGGRESSIVE, -5.0, 40.0, true},
-				{PRESET_VAL_TRANSPARENT, -1.5, 50.0, true},
-				{PRESET_VAL_MUSIC, -2.0, 200.0, true},
-				{PRESET_VAL_BRICKWALL, -0.3, 50.0, true}
-			};
+			} preset_tests[] = {{PRESET_VAL_DEFAULT, DEFAULT_THRESHOLD_DB, DEFAULT_RELEASE_MS,
+					     DEFAULT_LOOKAHEAD_ENABLED},
+					    {PRESET_VAL_PODCAST, -8.0, 80.0, true},
+					    {PRESET_VAL_STREAMING, -7.0, 70.0, true},
+					    {PRESET_VAL_AGGRESSIVE, -5.0, 40.0, true},
+					    {PRESET_VAL_TRANSPARENT, -1.5, 50.0, true},
+					    {PRESET_VAL_MUSIC, -2.0, 200.0, true},
+					    {PRESET_VAL_BRICKWALL, -0.3, 50.0, true}};
 
 			obs_property_t *preset_prop = obs_properties_get(props, S_PRESET);
 			ASSERT_NOT_NULL(preset_prop, "Got preset property handle");
 
 			// Test each preset
-			for (size_t i = 0; i < sizeof(preset_tests)/sizeof(preset_tests[0]); i++) {
+			for (size_t i = 0; i < sizeof(preset_tests) / sizeof(preset_tests[0]); i++) {
 				printf("   INFO: Testing preset: %s\n", preset_tests[i].preset_id);
 				obs_data_set_string(settings, S_PRESET, preset_tests[i].preset_id);
 
@@ -407,16 +421,14 @@ static void test_limiter_all_presets(bool *test_passed)
 				}
 
 				ASSERT_EQUAL_DBL(obs_data_get_double(settings, S_FILTER_THRESHOLD),
-								preset_tests[i].threshold, 0.01,
-								"Preset threshold applied correctly");
+						 preset_tests[i].threshold, 0.01, "Preset threshold applied correctly");
 
-				ASSERT_EQUAL_DBL(obs_data_get_double(settings, S_RELEASE_TIME),
-								preset_tests[i].release, 0.01,
-								"Preset release time applied correctly");
+				ASSERT_EQUAL_DBL(obs_data_get_double(settings, S_RELEASE_TIME), preset_tests[i].release,
+						 0.01, "Preset release time applied correctly");
 
 				ASSERT_TRUE(obs_data_get_bool(settings, S_LOOKAHEAD_ENABLED) ==
-						   preset_tests[i].lookahead_enabled,
-						   "Preset lookahead enabled state applied correctly");
+						    preset_tests[i].lookahead_enabled,
+					    "Preset lookahead enabled state applied correctly");
 			}
 
 			obs_properties_destroy(props);
@@ -452,30 +464,32 @@ static void test_limiter_peak_limiting(bool *test_passed)
 
 	filter = obs_source_create_private(limiter_v2_filter.id, "Test Peak Limiting", settings);
 	ASSERT_NOT_NULL(filter, "limiter_v2_create succeeded for peak limiting test");
-	if (!filter) goto cleanup_peak;
+	if (!filter)
+		goto cleanup_peak;
 
 	void *filter_data_ptr = obs_source_get_filter_data(filter);
 	ASSERT_NOT_NULL(filter_data_ptr, "Got filter data pointer for peak limiting test");
-	if (!filter_data_ptr) goto cleanup_peak;
+	if (!filter_data_ptr)
+		goto cleanup_peak;
 
 	size_t channels = audio_output_get_channels(obs_get_audio());
-	if (channels == 0 || channels > MAX_AUDIO_CHANNELS) channels = TEST_CHANNELS;
+	if (channels == 0 || channels > MAX_AUDIO_CHANNELS)
+		channels = TEST_CHANNELS;
 	uint32_t sample_rate = audio_output_get_sample_rate(obs_get_audio());
-	if (sample_rate == 0) sample_rate = TEST_SAMPLE_RATE;
+	if (sample_rate == 0)
+		sample_rate = TEST_SAMPLE_RATE;
 
 	// Allocate channel buffers
 	for (size_t c = 0; c < channels; ++c) {
 		channel_buffers[c] = bzalloc(sizeof(float) * TEST_BLOCK_SIZE);
 		ASSERT_NOT_NULL(channel_buffers[c], "Audio channel buffer allocated for peak limiting test");
-		audio_pointers[c] = (uint8_t*)channel_buffers[c];
+		audio_pointers[c] = (uint8_t *)channel_buffers[c];
 	}
 
 	// Initialize audio data struct using struct literal
-	struct obs_audio_data audio_data = {
-		.frames = TEST_BLOCK_SIZE,
-		.timestamp = os_gettime_ns(),
-		.data = (const uint8_t **)audio_pointers
-	};
+	struct obs_audio_data audio_data = {.frames = TEST_BLOCK_SIZE,
+					    .timestamp = os_gettime_ns(),
+					    .data = (const uint8_t **)audio_pointers};
 
 	// Fill with signal guaranteed to exceed threshold by a lot
 	for (size_t c = 0; c < channels; ++c) {
@@ -508,8 +522,9 @@ static void test_limiter_peak_limiting(bool *test_passed)
 					// Allow a small margin for implementation differences
 					if (sample_abs > (threshold_linear * db_to_mul(test_margin_db))) {
 						peaks_limited = false;
-						fprintf(stderr, "  ERROR: Sample at %u in channel %zu exceeds threshold: %f (threshold: %f)\n",
-								i, c, sample_abs, threshold_linear);
+						fprintf(stderr,
+							"  ERROR: Sample at %u in channel %zu exceeds threshold: %f (threshold: %f)\n",
+							i, c, sample_abs, threshold_linear);
 						break;
 					}
 				}
@@ -517,8 +532,8 @@ static void test_limiter_peak_limiting(bool *test_passed)
 		}
 
 		ASSERT_TRUE(peaks_limited, "All output peaks are limited to threshold");
-		printf("   INFO: Maximum sample value after limiting: %f (linear), threshold: %f\n",
-			   max_sample, threshold_linear);
+		printf("   INFO: Maximum sample value after limiting: %f (linear), threshold: %f\n", max_sample,
+		       threshold_linear);
 	} else {
 		fprintf(stderr, "  ERROR: filter_audio function pointer is NULL!\n");
 		*test_passed = false;
@@ -553,7 +568,8 @@ static void test_limiter_lookahead_delay(bool *test_passed)
 
 	filter = obs_source_create_private(limiter_v2_filter.id, "Test Lookahead", settings);
 	ASSERT_NOT_NULL(filter, "limiter_v2_create succeeded for lookahead test");
-	if (!filter) goto cleanup_lookahead;
+	if (!filter)
+		goto cleanup_lookahead;
 
 	// Verify reported audio latency
 	uint64_t reported_latency_ns = obs_source_get_audio_latency(filter);
@@ -564,12 +580,15 @@ static void test_limiter_lookahead_delay(bool *test_passed)
 
 	void *filter_data_ptr = obs_source_get_filter_data(filter);
 	ASSERT_NOT_NULL(filter_data_ptr, "Got filter data pointer for lookahead test");
-	if (!filter_data_ptr) goto cleanup_lookahead;
+	if (!filter_data_ptr)
+		goto cleanup_lookahead;
 
 	size_t channels = audio_output_get_channels(obs_get_audio());
-	if (channels == 0 || channels > MAX_AUDIO_CHANNELS) channels = TEST_CHANNELS;
+	if (channels == 0 || channels > MAX_AUDIO_CHANNELS)
+		channels = TEST_CHANNELS;
 	uint32_t sample_rate = audio_output_get_sample_rate(obs_get_audio());
-	if (sample_rate == 0) sample_rate = TEST_SAMPLE_RATE;
+	if (sample_rate == 0)
+		sample_rate = TEST_SAMPLE_RATE;
 
 	// Calculate lookahead samples
 	uint32_t expected_lookahead_samples = (uint32_t)((sample_rate * lookahead_ms) / 1000.0f);
@@ -578,15 +597,13 @@ static void test_limiter_lookahead_delay(bool *test_passed)
 	for (size_t c = 0; c < channels; ++c) {
 		channel_buffers[c] = bzalloc(sizeof(float) * TEST_BLOCK_SIZE);
 		ASSERT_NOT_NULL(channel_buffers[c], "Audio channel buffer allocated for lookahead test");
-		audio_pointers[c] = (uint8_t*)channel_buffers[c];
+		audio_pointers[c] = (uint8_t *)channel_buffers[c];
 	}
 
 	// Initialize audio data struct using struct literal
-	struct obs_audio_data audio_data = {
-		.frames = TEST_BLOCK_SIZE,
-		.timestamp = os_gettime_ns(),
-		.data = (const uint8_t **)audio_pointers
-	};
+	struct obs_audio_data audio_data = {.frames = TEST_BLOCK_SIZE,
+					    .timestamp = os_gettime_ns(),
+					    .data = (const uint8_t **)audio_pointers};
 
 	// Create an impulse signal (1.0 at first sample, 0 elsewhere)
 	for (size_t c = 0; c < channels; ++c) {
@@ -609,8 +626,9 @@ static void test_limiter_lookahead_delay(bool *test_passed)
 				// Check that samples before lookahead point are zero (or near zero)
 				for (uint32_t i = 0; i < expected_lookahead_samples; ++i) {
 					if (fabsf(channel_buffers[c][i]) > 0.01f) {
-						fprintf(stderr, "  ERROR: Sample at %u in channel %zu should be zero due to lookahead delay: %f\n",
-								i, c, channel_buffers[c][i]);
+						fprintf(stderr,
+							"  ERROR: Sample at %u in channel %zu should be zero due to lookahead delay: %f\n",
+							i, c, channel_buffers[c][i]);
 						delay_correct = false;
 						break;
 					}
@@ -618,7 +636,8 @@ static void test_limiter_lookahead_delay(bool *test_passed)
 
 				// Check that the impulse appears at or near the lookahead point
 				bool impulse_found = false;
-				for (uint32_t i = expected_lookahead_samples; i < expected_lookahead_samples + 5 && i < TEST_BLOCK_SIZE; ++i) {
+				for (uint32_t i = expected_lookahead_samples;
+				     i < expected_lookahead_samples + 5 && i < TEST_BLOCK_SIZE; ++i) {
 					if (fabsf(channel_buffers[c][i]) > 0.5f) { // Allow for some attenuation
 						impulse_found = true;
 						break;
@@ -626,7 +645,8 @@ static void test_limiter_lookahead_delay(bool *test_passed)
 				}
 
 				if (!impulse_found) {
-					fprintf(stderr, "  ERROR: Impulse not found at expected position after lookahead\n");
+					fprintf(stderr,
+						"  ERROR: Impulse not found at expected position after lookahead\n");
 					delay_correct = false;
 				}
 			}
@@ -649,7 +669,8 @@ cleanup_lookahead:
 
 // --- Main Test Function ---
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
 	UNUSED_PARAMETER(argc);
 	UNUSED_PARAMETER(argv);
 
