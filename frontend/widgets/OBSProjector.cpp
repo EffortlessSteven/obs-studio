@@ -152,7 +152,7 @@ void OBSProjector::OBSRenderMultiview(void *data, uint32_t cx, uint32_t cy)
 
 void OBSProjector::OBSRender(void *data, uint32_t cx, uint32_t cy)
 {
-	OBSProjector *window = reinterpret_cast<OBSProjector *>(data);
+	OBSProjector *window = static_cast<OBSProjector *>(data);
 
 	if (!window->ready)
 		return;
@@ -206,7 +206,7 @@ void OBSProjector::OBSRender(void *data, uint32_t cx, uint32_t cy)
 
 void OBSProjector::OBSSourceRenamed(void *data, calldata_t *params)
 {
-	OBSProjector *window = reinterpret_cast<OBSProjector *>(data);
+	OBSProjector *window = static_cast<OBSProjector *>(data);
 	QString oldName = calldata_string(params, "prev_name");
 	QString newName = calldata_string(params, "new_name");
 
@@ -215,7 +215,7 @@ void OBSProjector::OBSSourceRenamed(void *data, calldata_t *params)
 
 void OBSProjector::OBSSourceDestroyed(void *data, calldata_t *)
 {
-	OBSProjector *window = reinterpret_cast<OBSProjector *>(data);
+	OBSProjector *window = static_cast<OBSProjector *>(data);
 	QMetaObject::invokeMethod(window, "EscapeTriggered");
 }
 
@@ -334,7 +334,7 @@ void OBSProjector::UpdateProjectorTitle(QString name)
 		title = QTStr("Projector.Title") + " - " + QTStr("StudioMode.Program");
 		break;
 	case ProjectorType::Multiview:
-		title = QTStr("Projector.Title") + " - " + QTStr("Multiview");
+		title = QTStr("Projector.Title") + " - " + QTStr("Projector.Title.Multiview");
 		break;
 	default:
 		title = name;

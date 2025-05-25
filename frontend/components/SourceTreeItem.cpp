@@ -58,6 +58,7 @@ SourceTreeItem::SourceTreeItem(SourceTree *tree_, OBSSceneItem sceneitem_) : tre
 		QPixmap pixmap = icon.pixmap(QSize(16, 16));
 
 		iconLabel = new QLabel();
+		iconLabel->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
 		iconLabel->setPixmap(pixmap);
 		iconLabel->setEnabled(sourceVisible);
 		iconLabel->setStyleSheet("background: none");
@@ -69,16 +70,17 @@ SourceTreeItem::SourceTreeItem(SourceTree *tree_, OBSSceneItem sceneitem_) : tre
 	vis->setChecked(sourceVisible);
 	vis->setAccessibleName(QTStr("Basic.Main.Sources.Visibility"));
 	vis->setAccessibleDescription(QTStr("Basic.Main.Sources.VisibilityDescription").arg(name));
+	vis->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Preferred);
 
 	lock = new QCheckBox();
 	lock->setProperty("class", "checkbox-icon indicator-lock");
 	lock->setChecked(obs_sceneitem_locked(sceneitem));
 	lock->setAccessibleName(QTStr("Basic.Main.Sources.Lock"));
 	lock->setAccessibleDescription(QTStr("Basic.Main.Sources.LockDescription").arg(name));
+	lock->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Preferred);
 
 	label = new OBSSourceLabel(source);
-	label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-	label->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+	label->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
 	label->setAttribute(Qt::WA_TranslucentBackground);
 	label->setEnabled(sourceVisible);
 
@@ -172,7 +174,7 @@ void SourceTreeItem::ReconnectSignals()
 	/* --------------------------------------------------------- */
 
 	auto removeItem = [](void *data, calldata_t *cd) {
-		SourceTreeItem *this_ = reinterpret_cast<SourceTreeItem *>(data);
+		SourceTreeItem *this_ = static_cast<SourceTreeItem *>(data);
 		obs_sceneitem_t *curItem = (obs_sceneitem_t *)calldata_ptr(cd, "item");
 		obs_scene_t *curScene = (obs_scene_t *)calldata_ptr(cd, "scene");
 
@@ -186,7 +188,7 @@ void SourceTreeItem::ReconnectSignals()
 	};
 
 	auto itemVisible = [](void *data, calldata_t *cd) {
-		SourceTreeItem *this_ = reinterpret_cast<SourceTreeItem *>(data);
+		SourceTreeItem *this_ = static_cast<SourceTreeItem *>(data);
 		obs_sceneitem_t *curItem = (obs_sceneitem_t *)calldata_ptr(cd, "item");
 		bool visible = calldata_bool(cd, "visible");
 
@@ -195,7 +197,7 @@ void SourceTreeItem::ReconnectSignals()
 	};
 
 	auto itemLocked = [](void *data, calldata_t *cd) {
-		SourceTreeItem *this_ = reinterpret_cast<SourceTreeItem *>(data);
+		SourceTreeItem *this_ = static_cast<SourceTreeItem *>(data);
 		obs_sceneitem_t *curItem = (obs_sceneitem_t *)calldata_ptr(cd, "item");
 		bool locked = calldata_bool(cd, "locked");
 
@@ -204,7 +206,7 @@ void SourceTreeItem::ReconnectSignals()
 	};
 
 	auto itemSelect = [](void *data, calldata_t *cd) {
-		SourceTreeItem *this_ = reinterpret_cast<SourceTreeItem *>(data);
+		SourceTreeItem *this_ = static_cast<SourceTreeItem *>(data);
 		obs_sceneitem_t *curItem = (obs_sceneitem_t *)calldata_ptr(cd, "item");
 
 		if (curItem == this_->sceneitem)
@@ -212,7 +214,7 @@ void SourceTreeItem::ReconnectSignals()
 	};
 
 	auto itemDeselect = [](void *data, calldata_t *cd) {
-		SourceTreeItem *this_ = reinterpret_cast<SourceTreeItem *>(data);
+		SourceTreeItem *this_ = static_cast<SourceTreeItem *>(data);
 		obs_sceneitem_t *curItem = (obs_sceneitem_t *)calldata_ptr(cd, "item");
 
 		if (curItem == this_->sceneitem)
@@ -220,7 +222,7 @@ void SourceTreeItem::ReconnectSignals()
 	};
 
 	auto reorderGroup = [](void *data, calldata_t *) {
-		SourceTreeItem *this_ = reinterpret_cast<SourceTreeItem *>(data);
+		SourceTreeItem *this_ = static_cast<SourceTreeItem *>(data);
 		QMetaObject::invokeMethod(this_->tree, "ReorderItems");
 	};
 
@@ -245,7 +247,7 @@ void SourceTreeItem::ReconnectSignals()
 	/* --------------------------------------------------------- */
 
 	auto removeSource = [](void *data, calldata_t *) {
-		SourceTreeItem *this_ = reinterpret_cast<SourceTreeItem *>(data);
+		SourceTreeItem *this_ = static_cast<SourceTreeItem *>(data);
 		this_->DisconnectSignals();
 		this_->sceneitem = nullptr;
 		QMetaObject::invokeMethod(this_->tree, "RefreshItems");

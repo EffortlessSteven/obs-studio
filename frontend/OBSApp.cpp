@@ -26,6 +26,9 @@
 
 #if !defined(_WIN32) && !defined(__APPLE__)
 #include <obs-nix-platform.h>
+#if QT_VERSION < QT_VERSION_CHECK(6, 5, 0)
+#include <qpa/qplatformnativeinterface.h>
+#endif
 #endif
 #include <qt-wrappers.hpp>
 
@@ -37,9 +40,6 @@
 #include <QSessionManager>
 #else
 #include <QSocketNotifier>
-#endif
-#if !defined(_WIN32) && !defined(__APPLE__)
-#include <qpa/qplatformnativeinterface.h>
 #endif
 
 #ifdef _WIN32
@@ -230,11 +230,13 @@ bool OBSApp::InitGlobalConfigDefaults()
 
 #ifdef _WIN32
 	config_set_default_bool(appConfig, "Audio", "DisableAudioDucking", true);
+#endif
+
+#if defined(_WIN32) || defined(__APPLE__) || defined(__linux__)
 	config_set_default_bool(appConfig, "General", "BrowserHWAccel", true);
 #endif
 
 #ifdef __APPLE__
-	config_set_default_bool(appConfig, "General", "BrowserHWAccel", true);
 	config_set_default_bool(appConfig, "Video", "DisableOSXVSync", true);
 	config_set_default_bool(appConfig, "Video", "ResetOSXVSyncOnExit", true);
 #endif
@@ -1048,20 +1050,36 @@ bool OBSApp::OBSInit()
 
 #if !defined(_WIN32) && !defined(__APPLE__)
 	if (QApplication::platformName() == "xcb") {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+		auto native = qGuiApp->nativeInterface<QNativeInterface::QX11Application>();
+
+		obs_set_nix_platform_display(native->display());
+#endif
+
 		obs_set_nix_platform(OBS_NIX_PLATFORM_X11_EGL);
+
 		blog(LOG_INFO, "Using EGL/X11");
 	}
 
 #ifdef ENABLE_WAYLAND
 	if (QApplication::platformName().contains("wayland")) {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+		auto native = qGuiApp->nativeInterface<QNativeInterface::QWaylandApplication>();
+
+		obs_set_nix_platform_display(native->display());
+#endif
+
 		obs_set_nix_platform(OBS_NIX_PLATFORM_WAYLAND);
 		setAttribute(Qt::AA_DontCreateNativeWidgetSiblings);
+
 		blog(LOG_INFO, "Platform: Wayland");
 	}
 #endif
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 5, 0)
 	QPlatformNativeInterface *native = QGuiApplication::platformNativeInterface();
 	obs_set_nix_platform_display(native->nativeResourceForIntegration("display"));
+#endif
 #endif
 
 #ifdef __APPLE__
@@ -1075,7 +1093,7 @@ bool OBSApp::OBSInit()
 
 	obs_set_ui_task_handler(ui_task_handler);
 
-#if defined(_WIN32) || defined(__APPLE__)
+#if defined(_WIN32) || defined(__APPLE__) || defined(__linux__)
 	bool browserHWAccel = config_get_bool(appConfig, "General", "BrowserHWAccel");
 
 	OBSDataAutoRelease settings = obs_data_create();
@@ -1119,12 +1137,7 @@ string OBSApp::GetVersionString(bool platform) const
 {
 	stringstream ver;
 
-#ifdef HAVE_OBSCONFIG_H
 	ver << obs_get_version_string();
-#else
-	ver << LIBOBS_API_MAJOR_VER << "." << LIBOBS_API_MINOR_VER << "." << LIBOBS_API_PATCH_VER;
-
-#endif
 
 	if (platform) {
 		ver << " (";

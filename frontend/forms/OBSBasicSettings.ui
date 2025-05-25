@@ -1023,7 +1023,7 @@
                    <item row="2" column="0">
                     <widget class="QLabel" name="appearanceSettingLabelFontScale">
                      <property name="text">
-                      <string>Font Size</string>
+                      <string>Basic.Settings.Appearance.FontScale</string>
                      </property>
                      <property name="buddy">
                       <cstring>appearanceFontScale</cstring>
@@ -1116,7 +1116,7 @@
                    <item row="3" column="0">
                     <widget class="QLabel" name="label_20">
                      <property name="text">
-                      <string>Density</string>
+                      <string>Basic.Settings.Appearance.Density</string>
                      </property>
                     </widget>
                    </item>
@@ -1147,7 +1147,7 @@
                       <item>
                        <widget class="QPushButton" name="appearanceDensity1">
                         <property name="text">
-                         <string>Classic</string>
+                         <string>Basic.Settings.Appearance.Classic</string>
                         </property>
                         <property name="checkable">
                          <bool>true</bool>
@@ -1163,7 +1163,7 @@
                       <item>
                        <widget class="QPushButton" name="appearanceDensity2">
                         <property name="text">
-                         <string>Compact</string>
+                         <string>Basic.Settings.Appearance.Compact</string>
                         </property>
                         <property name="checkable">
                          <bool>true</bool>
@@ -1179,7 +1179,7 @@
                       <item>
                        <widget class="QPushButton" name="appearanceDensity3">
                         <property name="text">
-                         <string>Normal</string>
+                         <string>Basic.Settings.Appearance.Normal</string>
                         </property>
                         <property name="checkable">
                          <bool>true</bool>
@@ -1198,7 +1198,7 @@
                       <item>
                        <widget class="QPushButton" name="appearanceDensity4">
                         <property name="text">
-                         <string>Comfortable</string>
+                         <string>Basic.Settings.Appearance.Comfortable</string>
                         </property>
                         <property name="checkable">
                          <bool>true</bool>
@@ -1258,7 +1258,7 @@
                    <item>
                     <widget class="QLabel" name="appearanceOptionsWarningLabel">
                      <property name="text">
-                      <string>Some appearance options are not available for this style.</string>
+                      <string>Basic.Settings.Appearance.OptionsWarning</string>
                      </property>
                      <property name="class" stdset="0">
                       <string>text-warning</string>
@@ -1907,6 +1907,29 @@
                    <property name="fieldGrowthPolicy">
                     <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
                    </property>
+                   <item row="0" column="0">
+                    <spacer name="horizontalSpacer_30">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeType">
+                      <enum>QSizePolicy::Fixed</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>170</width>
+                       <height>10</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item row="0" column="1">
+                    <widget class="QCheckBox" name="enableMultitrackVideo">
+                     <property name="text">
+                      <string>Basic.Settings.Stream.EnableMultitrackVideo</string>
+                     </property>
+                    </widget>
+                   </item>
                    <item row="1" column="0">
                     <widget class="QLabel" name="multitrackVideoMaximumAggregateBitrateLabel">
                      <property name="text">
@@ -1993,7 +2016,14 @@
                      </item>
                     </layout>
                    </item>
-                   <item row="3" column="0">
+                   <item row="3" column="1">
+                    <widget class="QComboBox" name="multitrackVideoAdditionalCanvas">
+                     <property name="placeholderText">
+                      <string>None</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="4" column="0">
                     <spacer name="horizontalSpacer_32">
                      <property name="orientation">
                       <enum>Qt::Horizontal</enum>
@@ -2009,28 +2039,28 @@
                      </property>
                     </spacer>
                    </item>
-                   <item row="3" column="1">
+                   <item row="4" column="1">
                     <widget class="QCheckBox" name="multitrackVideoStreamDumpEnable">
                      <property name="text">
                       <string>Basic.Settings.Stream.MultitrackVideoStreamDumpEnable</string>
                      </property>
                     </widget>
                    </item>
-                   <item row="4" column="1">
+                   <item row="5" column="1">
                     <widget class="QCheckBox" name="multitrackVideoConfigOverrideEnable">
                      <property name="text">
                       <string>Basic.Settings.Stream.MultitrackVideoConfigOverrideEnable</string>
                      </property>
                     </widget>
                    </item>
-                   <item row="5" column="0">
+                   <item row="6" column="0">
                     <widget class="QLabel" name="multitrackVideoConfigOverrideLabel">
                      <property name="text">
                       <string>Basic.Settings.Stream.MultitrackVideoConfigOverride</string>
                      </property>
                     </widget>
                    </item>
-                   <item row="5" column="1">
+                   <item row="6" column="1">
                     <widget class="QPlainTextEdit" name="multitrackVideoConfigOverride">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -2040,28 +2070,12 @@
                      </property>
                     </widget>
                    </item>
-                   <item row="0" column="1">
-                    <widget class="QCheckBox" name="enableMultitrackVideo">
+                   <item row="3" column="0">
+                    <widget class="QLabel" name="multitrackVideoAdditionalCanvasLabel">
                      <property name="text">
-                      <string>Basic.Settings.Stream.EnableMultitrackVideo</string>
+                      <string>Basic.Settings.Stream.MultitrackVideoExtraCanvas</string>
                      </property>
                     </widget>
-                   </item>
-                   <item row="0" column="0">
-                    <spacer name="horizontalSpacer_30">
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="sizeType">
-                      <enum>QSizePolicy::Fixed</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>170</width>
-                       <height>10</height>
-                      </size>
-                     </property>
-                    </spacer>
                    </item>
                   </layout>
                  </item>

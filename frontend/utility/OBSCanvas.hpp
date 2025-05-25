@@ -1,7 +1,5 @@
 /******************************************************************************
-    Copyright (C) 2023 by Lain Bailey <lain@obsproject.com>
-                          Zachary Lund <admin@computerquip.com>
-                          Philippe Groarke <philippe.groarke@gmail.com>
+    Copyright (C) 2025 by Dennis Sädtler <saedtler@twitch.tv>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,10 +15,37 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ******************************************************************************/
 
-#include "ColorSelect.hpp"
-#include "moc_ColorSelect.cpp"
+#pragma once
 
-ColorSelect::ColorSelect(QWidget *parent) : QWidget(parent), ui(new Ui::ColorSelect)
-{
-	ui->setupUi(this);
-}
+#include <optional>
+#include <vector>
+
+#include "obs.h"
+#include "obs.hpp"
+
+namespace OBS {
+class Canvas {
+
+public:
+	Canvas(obs_canvas_t *canvas);
+	Canvas(Canvas &&other) noexcept;
+
+	~Canvas() noexcept;
+
+	// No default or copy/move constructors
+	Canvas() = delete;
+	Canvas(Canvas &other) = delete;
+
+	Canvas &operator=(Canvas &&other) noexcept;
+
+	operator obs_canvas_t *() const { return canvas; }
+
+	[[nodiscard]] std::optional<OBSDataAutoRelease> Save() const;
+	static std::optional<Canvas> Load(obs_data_t *data);
+	static std::vector<Canvas> LoadCanvases(obs_data_array_t *canvases);
+	static OBSDataArrayAutoRelease SaveCanvases(const std::vector<Canvas> &canvases);
+
+private:
+	obs_canvas_t *canvas = nullptr;
+};
+} // namespace OBS
