@@ -102,7 +102,7 @@
     --border_highlight: "transparent";
 
     /* OS Fixes */
-    --os_mac_font_base_value: 12;
+    --os_mac_font_base_value: calc(1.2 * var(--obsFontScale));
 
     --font_base: calc(1pt * var(--font_base_value));
     --font_small: max(7pt, calc(0.8pt * var(--font_base_value)));
@@ -113,6 +113,7 @@
     --font_heading: calc(2.5pt * var(--font_base_value));
 
     --icon_base: calc(calc(max(2, var(--obsPadding)) * 1px) + 12px);
+    --icon_small: calc(4px + var(--font_base_value));
 
     --spacing_base: min(max(1px, calc(0.4 * var(--spacing_base_value))), 2px);
     --spacing_large: min(max(2px, calc(1px * var(--spacing_base_value))), 4px);
@@ -127,6 +128,7 @@
     --padding_container: max(4px, var(--padding_base));
     --padding_wide: min(calc(12px + max(var(--padding_base_value), 4)), 24px);
     --padding_menu: calc(4px + calc(2 * var(--padding_base_value)));
+    --padding_menubar: max(6px, calc(2px + calc(1.25 * var(--padding_base_value))));
 
     --padding_base_border: calc(var(--padding_base) + 1px);
 
@@ -138,6 +140,13 @@
 
     --scrollbar_size: 12px;
     --settings_scrollbar_size: calc(var(--scrollbar_size) + 9px);
+    --scrollbar_handle: var(--grey4);
+    
+    --scrollbar_bg: var(--grey6);
+    --scrollbar_hover: var(--grey3);
+    --scrollbar_down: var(--grey2);
+
+    --scrollbar_border: var(--grey2);
 
     /* Inputs / Controls */
     --border_color: var(--grey4);
@@ -187,10 +196,8 @@
     --tab_border_focus: var(--button_border_focus);
     --tab_border_selected: var(--primary);
 
-    --scrollbar: var(--grey4);
-    --scrollbar_hover: var(--grey3);
-    --scrollbar_down: var(--grey8);
-    --scrollbar_border: var(--grey2);
+    --tab_padding_base: calc(5px + var(--padding_base));
+    --tab_padding_large: calc(9px + var(--padding_base));
 
     --preview_scale_width: calc(calc(var(--input_text_padding) * 3.5) * calc(var(--font_base_value) / 10));
 
@@ -451,7 +458,10 @@ QListWidget QWidget {
     border: 1px solid var(--bg_base);
 }
 
-* {
+QCheckBox,
+QGroupBox,
+QMenuBar,
+QRadioButton {
     spacing: var(--spacing_small);
 }
 
@@ -465,6 +475,19 @@ QToolTip {
     background-color: var(--bg_base);
     color: var(--text);
     border: none;
+}
+
+QProgressBar {
+    text-align: center;
+    border-radius: 4px;
+    border-top: 2px solid transparent;
+}
+
+QProgressBar::chunk {
+    background: var(--blue3);
+    border-top: 1px solid var(--blue2);
+    border-bottom: 2px solid var(--blue4);
+    border-radius: var(--border_radius_small);
 }
 
 /* Context Menu */
@@ -495,7 +518,7 @@ QMenu::right-arrow {
 /* Top Menu Bar Items */
 QMenuBar::item {
     background-color: transparent;
-    padding: var(--padding_large) var(--padding_xlarge);
+    padding: var(--padding_large) var(--padding_menubar);
 }
 
 QMenuBar::item:selected {
@@ -542,6 +565,13 @@ QMenu::item {
 SourceTreeItem {
     border-radius: var(--border_radius);
     color: var(--text);
+}
+
+/* Temporary fix for plugins affected by fix in #11555 */
+QListView::item,
+QListWidget::item,
+SourceTreeItem {
+    min-height: var(--padding_menu);
 }
 
 SourceTreeItem .checkbox-icon {
@@ -604,13 +634,13 @@ QListWidget QLineEdit:focus {
 /* Settings QList */
 
 OBSBasicSettings QScrollBar:vertical {
+    width: var(--scrollbar_size);
     width: var(--settings_scrollbar_size);
     margin-left: 9px;
 }
 
 OBSBasicSettings QScrollBar:horizontal {
     height: var(--settings_scrollbar_size);
-    margin-top: 9px;
 }
 
 /* Settings properties view */
@@ -625,6 +655,37 @@ OBSDock > QWidget {
     border-bottom-right-radius: var(--border_radius);
     border: 1px solid var(--border_color);
     border-top: none;
+}
+
+OBSDock QToolBar {
+    padding: 1px;
+    margin: 0px;
+    border-top: 1px solid var(--border_color);
+    spacing: 0;
+}
+
+OBSDock QToolBar::separator {
+    background: transparent;
+    width: var(--spacing_large);
+    border: none;
+}
+
+OBSDock QToolBar QToolButton {
+    background: transparent;
+    border: 1px solid transparent;
+    margin: 1px;
+    margin-top: 2px;
+    padding: var(--padding_large);
+    max-width: var(--icon_small);
+    max-height: var(--icon_small);
+}
+
+OBSDock QToolBar QToolButton:hover {
+    border-color: var(--grey1);
+}
+
+OBSDock QToolBar QToolButton:disabled {
+    background: var(--grey7);
 }
 
 #transitionsFrame {
@@ -674,8 +735,13 @@ QDockWidget::float-button:pressed {
     padding: 1px -1px -1px 1px;
 }
 
-QScrollArea {
+QAbstractScrollArea {
     border-radius: var(--border_radius);
+}
+
+/* ScrollAreaContents */
+QScrollArea > QWidget > QWidget {
+    background: transparent;
 }
 
 /* Qt enforces a padding inside its status bar, so we
@@ -714,9 +780,10 @@ QGroupBox::title {
 /* ScrollBars */
 
 QScrollBar {
-    background-color: var(--grey6);
+    background-color: var(--scrollbar_bg);
     margin: 0px;
     border-radius: var(--border_radius);
+    border: 1px solid var(--grey6);
 }
 
 ::corner {
@@ -765,10 +832,10 @@ QScrollBar::sub-page:horizontal {
 }
 
 QScrollBar::handle {
-    background-color: var(--scrollbar);
+    background-color: var(--scrollbar_handle);
     margin: 2px;
     border-radius: var(--border_radius_small);
-    border: 1px solid var(--scrollbar);
+    border: 1px solid var(--scrollbar_handle);
 }
 
 QScrollBar::handle:hover {
@@ -792,6 +859,32 @@ QScrollBar::handle:horizontal {
 QScrollBar::handle:disabled {
     background: transparent;
     border-color: transparent;
+}
+
+OBSDock QListWidget {
+    padding: 0;
+}
+
+OBSDock QListWidget::item {
+    margin: 0 var(--spacing_base);
+}
+
+OBSDock QScrollBar {
+    border-radius: 0;
+}
+
+OBSDock QListWidget::corner {
+    background: transparent;
+    border-top: 1px solid var(--border_color);
+    border-left: 1px solid var(--border_color);
+}
+
+OBSDock QScrollBar:horizontal {
+    border-top: 1px solid var(--border_color);
+}
+
+OBSDock QScrollBar:vertical {
+    border-left: 1px solid var(--border_color);
 }
 
 /* Source Context Bar */
@@ -867,7 +960,7 @@ QTabBar::tab {
     background: var(--tab_bg);
     color: var(--text);
     border: none;
-    padding: 8px 12px;
+    padding: var(--tab_padding_base) var(--tab_padding_large);
     min-width: 50px;
     margin: 1px 0px;
     margin-right: 2px;
@@ -1375,7 +1468,6 @@ QSlider::handle:disabled {
 #stackedMixerArea {
     border: none;
     padding: 0px;
-    border-bottom: 1px solid #3c404b;
 }
 
 VolControl {
@@ -1410,10 +1502,6 @@ VolControl #volLabel {
 }
 
 /* Vertical Mixer */
-#stackedMixerArea QScrollBar:vertical {
-    border-left: 1px solid var(--border_color);
-}
-
 #vMixerScrollArea VolControl {
     padding: var(--padding_container) 0px var(--padding_container);
     border-right: 1px solid var(--border_color);

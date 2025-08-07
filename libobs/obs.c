@@ -1273,15 +1273,13 @@ char *obs_find_data_file(const char *file)
 	return NULL;
 }
 
-// TODO: Remove after deprecation grace period
-OBS_DEPRECATED void obs_add_data_path(const char *path)
+void obs_add_data_path(const char *path)
 {
 	struct dstr *new_path = da_push_back_new(core_module_paths);
 	dstr_init_copy(new_path, path);
 }
 
-// TODO: Remove after deprecation grace period
-OBS_DEPRECATED bool obs_remove_data_path(const char *path)
+bool obs_remove_data_path(const char *path)
 {
 	for (size_t i = 0; i < core_module_paths.num; ++i) {
 		int result = dstr_cmp(&core_module_paths.array[i], path);
@@ -3049,18 +3047,22 @@ void start_raw_video(video_t *v, const struct video_scale_info *conversion, uint
 		     void (*callback)(void *param, struct video_data *frame), void *param)
 {
 	struct obs_core_video_mix *video = get_mix_for_video(v);
-	if (!video)
-		return;
-	if (video_output_connect2(v, conversion, frame_rate_divisor, callback, param))
+
+	// TODO: Make affected outputs use views/canvasses, and revert this later.
+	// https://github.com/obsproject/obs-studio/pull/12379
+	// https://github.com/obsproject/obs-studio/issues/12366
+	if (video_output_connect2(v, conversion, frame_rate_divisor, callback, param) && video)
 		os_atomic_inc_long(&video->raw_active);
 }
 
 void stop_raw_video(video_t *v, void (*callback)(void *param, struct video_data *frame), void *param)
 {
 	struct obs_core_video_mix *video = get_mix_for_video(v);
-	if (!video)
-		return;
-	if (video_output_disconnect2(v, callback, param))
+
+	// TODO: Make affected outputs use views/canvasses, and revert this later.
+	// https://github.com/obsproject/obs-studio/pull/12379
+	// https://github.com/obsproject/obs-studio/issues/12366
+	if (video_output_disconnect2(v, callback, param) && video)
 		os_atomic_dec_long(&video->raw_active);
 }
 
