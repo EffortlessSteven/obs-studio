@@ -20,7 +20,6 @@
  * - Output gain control (-20dB to +20dB) applied post-limiting.
  * - User-selectable presets for common broadcast, streaming, and music use cases.
  * - Dynamic UI: enables/disables lookahead slider based on lookahead toggle.
- * - Accurate audio latency reporting for proper A/V sync with lookahead enabled.
  * - Safe and efficient buffer management for low CPU overhead and reliable operation.
  */
 
@@ -813,8 +812,7 @@ static obs_properties_t *limiter_v2_properties(void *data)
  * - Audio system parameters (sample rate, channel count) change
  *
  * It updates all internal parameters, recalculates coefficients,
- * manages lookahead buffer state, and updates the audio latency
- * reporting to ensure proper A/V sync when lookahead is enabled.
+ * manages lookahead buffer state.
  */
 static void limiter_v2_update(void *data, obs_data_t *s)
 {
@@ -894,13 +892,6 @@ static void limiter_v2_update(void *data, obs_data_t *s)
 			cd->lookahead_samples = 0;
 		}
 	}
-
-	uint64_t latency_ns = 0;
-	if (cd->lookahead_enabled && cd->lookahead_buffers_initialized && cd->lookahead_samples > 0 &&
-	    cd->sample_rate > 0) {
-		latency_ns = (uint64_t)(((double)cd->lookahead_samples / cd->sample_rate) * 1.0e9);
-	}
-	obs_source_set_audio_latency(cd->context, latency_ns);
 
 	if (!cd->envelope_buf) {
 		size_t initial_env_len = (cd->sample_rate * INITIAL_ENV_BUF_MS) / MS_IN_S;

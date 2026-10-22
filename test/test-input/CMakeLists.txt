@@ -21,7 +21,6 @@ target_sources(
     test-input.c
     test-random.c
     test-sinewave.c
-    test-limiter-v2-filter.c
 )
 
 target_link_libraries(test-input PRIVATE OBS::libobs)
