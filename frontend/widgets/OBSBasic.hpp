@@ -23,16 +23,14 @@
 #include <OBSApp.hpp>
 #include <oauth/Auth.hpp>
 #include <utility/BasicOutputHandler.hpp>
+#include <utility/OBSCanvas.hpp>
 #include <utility/VCamConfig.hpp>
 #include <utility/platform.hpp>
 #include <utility/undo_stack.hpp>
 
 #include <obs-frontend-internal.hpp>
 #include <obs.hpp>
-
-Q_DECLARE_METATYPE(OBSScene);
-Q_DECLARE_METATYPE(OBSSceneItem);
-Q_DECLARE_METATYPE(OBSSource);
+#include <qt-wrappers.hpp>
 
 #include <graphics/matrix4.h>
 #include <util/platform.h>
@@ -1107,6 +1105,23 @@ public:
 
 	std::optional<SceneCollection> GetSceneCollectionByName(const std::string &collectionName) const;
 	std::optional<SceneCollection> GetSceneCollectionByFileName(const std::string &fileName) const;
+
+	/* -------------------------------------
+	 * MARK: - OBSBasic_Canvases
+	 * -------------------------------------
+	 */
+private:
+	std::vector<OBS::Canvas> canvases;
+
+	static void CanvasRemoved(void *data, calldata_t *params);
+
+public:
+	const std::vector<OBS::Canvas> &GetCanvases() const noexcept { return canvases; }
+
+	const OBS::Canvas &AddCanvas(const std::string &name, obs_video_info *ovi = nullptr, int flags = 0);
+
+public slots:
+	bool RemoveCanvas(OBSCanvas canvas);
 
 	/* -------------------------------------
 	 * MARK: - OBSBasic_SceneItems

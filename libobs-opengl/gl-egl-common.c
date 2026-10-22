@@ -17,8 +17,11 @@
 
 #include "gl-egl-common.h"
 
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <xf86drm.h>
 
 #include <glad/glad_egl.h>
 
@@ -26,9 +29,6 @@
 
 #include <linux/types.h>
 #include <asm/ioctl.h>
-#include <xf86drm.h>
-#include <unistd.h>
-#include <fcntl.h>
 typedef unsigned int drm_handle_t;
 
 #else
@@ -281,7 +281,7 @@ struct gs_texture *gl_egl_create_texture_from_pixmap(EGLDisplay egl_display, uin
 
 	EGLImage image = eglCreateImage(egl_display, EGL_NO_CONTEXT, EGL_NATIVE_PIXMAP_KHR, pixmap, pixmap_attrs);
 	if (image == EGL_NO_IMAGE) {
-		blog(LOG_DEBUG, "Cannot create EGLImage: %s", gl_egl_error_to_string(eglGetError()));
+		blog(LOG_ERROR, "Cannot create EGLImage: %s", gl_egl_error_to_string(eglGetError()));
 		return NULL;
 	}
 

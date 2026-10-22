@@ -27,21 +27,20 @@
 #include <stdint.h>
 #include <inttypes.h>
 #include <math.h>
-#include <string.h> // For memcpy, memset, memmove, strcmp
-#include <stdlib.h> // For fabsf, fmaxf, fminf
+#include <string.h>  // For memcpy, memset, memmove, strcmp
+#include <stdlib.h>  // For fabsf, fmaxf, fminf
 #include <stdbool.h> // For bool type
 
 #include <obs-module.h>
 #include <media-io/audio-math.h> // For db_to_mul, mul_to_db
 #include <util/platform.h>
-#include <util/bmem.h> // For bzalloc, brealloc, bfree
+#include <util/bmem.h>      // For bzalloc, brealloc, bfree
 #include <util/circlebuf.h> // For circular buffer implementation
 
 /* Prevent compiler warnings for unused parameters */
 #ifndef UNUSED_PARAMETER
 #define UNUSED_PARAMETER(x) (void)x
 #endif
-
 
 /* -------------------------------------------------------- */
 /* Logging                                                  */
@@ -248,7 +247,8 @@ static inline float gain_coefficient(uint32_t sample_rate, float time_ms)
  */
 static inline float calculate_env_change_rate(struct limiter_v2_data *cd)
 {
-	if (!cd) return 0.0f;
+	if (!cd)
+		return 0.0f;
 	float change_sum = 0.0f;
 	for (uint32_t i = 0; i < NUM_ENV_HISTORY - 1; ++i) {
 		uint32_t idx = (cd->prev_env_pos + i) % NUM_ENV_HISTORY;
@@ -270,7 +270,8 @@ static inline float calculate_env_change_rate(struct limiter_v2_data *cd)
  */
 static bool ensure_env_buffer(struct limiter_v2_data *cd, size_t num_samples)
 {
-	if (!cd) return false;
+	if (!cd)
+		return false;
 	if (cd->envelope_buf_len < num_samples) {
 		size_t new_len = num_samples;
 		float *new_buf = brealloc(cd->envelope_buf, new_len * sizeof(float));
@@ -303,7 +304,8 @@ static bool ensure_env_buffer(struct limiter_v2_data *cd, size_t num_samples)
  */
 static bool update_lookahead_buffers(struct limiter_v2_data *cd)
 {
-	if (!cd) return false;
+	if (!cd)
+		return false;
 
 	if (cd->lookahead_buffers_initialized) {
 		for (size_t i = 0; i < cd->num_channels; ++i) {
@@ -320,11 +322,11 @@ static bool update_lookahead_buffers(struct limiter_v2_data *cd)
 		return true;
 	}
 
-	debug("Initializing lookahead buffers for %zu samples, %zu channels.",
-	      cd->lookahead_samples, cd->num_channels);
+	debug("Initializing lookahead buffers for %zu samples, %zu channels.", cd->lookahead_samples, cd->num_channels);
 
 	size_t block_estimate = (cd->sample_rate * INITIAL_ENV_BUF_MS / MS_IN_S_F) + 1;
-	if (block_estimate == 0) block_estimate = 1024;
+	if (block_estimate == 0)
+		block_estimate = 1024;
 	size_t required_capacity_samples = cd->lookahead_samples + block_estimate;
 	size_t required_capacity_bytes = required_capacity_samples * sizeof(float);
 
@@ -343,7 +345,8 @@ static bool update_lookahead_buffers(struct limiter_v2_data *cd)
 	for (size_t i = 0; i < cd->num_channels; ++i) {
 		if (i >= MAX_AUDIO_CHANNELS) {
 			warn("Channel index %zu exceeds MAX_AUDIO_CHANNELS %d", i, MAX_AUDIO_CHANNELS);
-			success = false; break;
+			success = false;
+			break;
 		}
 
 		memset(&cd->lookahead_circbuf[i], 0, sizeof(struct circlebuf));
@@ -424,7 +427,8 @@ static inline float get_inter_sample_peak_estimate(float current_sample, float n
  */
 static void analyze_envelope(struct limiter_v2_data *cd, float **samples, const uint32_t num_samples)
 {
-	if (num_samples == 0 || !cd || !samples) return;
+	if (num_samples == 0 || !cd || !samples)
+		return;
 	if (!ensure_env_buffer(cd, num_samples)) {
 		warn("Cannot analyze envelope, buffer invalid or too small.");
 		return;
@@ -434,7 +438,8 @@ static void analyze_envelope(struct limiter_v2_data *cd, float **samples, const 
 	memset(cd->envelope_buf, 0, num_samples * sizeof(float));
 
 	for (size_t chan = 0; chan < cd->num_channels; ++chan) {
-		if (chan >= MAX_AUDIO_CHANNELS || !samples[chan]) continue;
+		if (chan >= MAX_AUDIO_CHANNELS || !samples[chan])
+			continue;
 
 		float *envelope_buf = cd->envelope_buf;
 		float current_env = cd->envelope; // Use clearer name
@@ -446,13 +451,15 @@ static void analyze_envelope(struct limiter_v2_data *cd, float **samples, const 
 			} else {
 				input_env = fabsf(samples[chan][i]);
 			}
-			if (!isfinite(input_env)) input_env = 0.0f;
+			if (!isfinite(input_env))
+				input_env = 0.0f;
 
 			float current_release_coeff = cd->release_coeff;
 			if (cd->adaptive_release_enabled) {
 				float env_change_rate = calculate_env_change_rate(cd);
 				if (env_change_rate > ADAPT_SENSITIVITY_THRESHOLD) {
-					float release_factor = fmaxf(1.0f, fminf(ADAPT_MAX_SPEEDUP_FACTOR, env_change_rate * ADAPT_SPEED_FACTOR));
+					float release_factor = fmaxf(1.0f, fminf(ADAPT_MAX_SPEEDUP_FACTOR,
+										 env_change_rate * ADAPT_SPEED_FACTOR));
 					float fast_release_time_ms = cd->release_time_ms / release_factor;
 					fast_release_time_ms = fmaxf(fast_release_time_ms, MIN_FAST_RELEASE_MS);
 					current_release_coeff = gain_coefficient(cd->sample_rate, fast_release_time_ms);
@@ -464,14 +471,16 @@ static void analyze_envelope(struct limiter_v2_data *cd, float **samples, const 
 			} else { // Release
 				current_env = input_env + current_release_coeff * (current_env - input_env);
 			}
-			if (!isfinite(current_env) || current_env < SMALL_EPSILON) current_env = 0.0f;
+			if (!isfinite(current_env) || current_env < SMALL_EPSILON)
+				current_env = 0.0f;
 
 			envelope_buf[i] = fmaxf(envelope_buf[i], current_env);
 		}
 	}
 
 	cd->envelope = (num_samples > 0 && cd->envelope_buf) ? cd->envelope_buf[num_samples - 1] : cd->envelope;
-	if (!isfinite(cd->envelope)) cd->envelope = 0.0f;
+	if (!isfinite(cd->envelope))
+		cd->envelope = 0.0f;
 
 	cd->prev_env_pos = (cd->prev_env_pos + 1) % NUM_ENV_HISTORY;
 	cd->prev_env_vals[cd->prev_env_pos] = cd->envelope;
@@ -490,7 +499,8 @@ static void analyze_envelope(struct limiter_v2_data *cd, float **samples, const 
  */
 static inline void process_compression(const struct limiter_v2_data *cd, float **samples, uint32_t num_samples)
 {
-	if (num_samples == 0) return;
+	if (num_samples == 0)
+		return;
 	if (!cd || !samples || !cd->envelope_buf || cd->envelope_buf_len < num_samples) {
 		warn("Cannot process compression, invalid state or buffer");
 		return;
@@ -505,12 +515,14 @@ static inline void process_compression(const struct limiter_v2_data *cd, float *
 			if (isfinite(env_db) && env_db > cd->threshold_db) {
 				float gain_reduction_db = cd->threshold_db - env_db;
 				gain_reduction_multiplier = db_to_mul(fminf(0.0f, gain_reduction_db));
-				if (!isfinite(gain_reduction_multiplier)) gain_reduction_multiplier = 0.0f;
+				if (!isfinite(gain_reduction_multiplier))
+					gain_reduction_multiplier = 0.0f;
 			}
 		}
 
 		float final_gain = gain_reduction_multiplier * cd->output_gain;
-		if (!isfinite(final_gain)) final_gain = 0.0f;
+		if (!isfinite(final_gain))
+			final_gain = 0.0f;
 
 		for (size_t c = 0; c < cd->num_channels; ++c) {
 			if (c < MAX_AUDIO_CHANNELS && samples[c] && isfinite(samples[c][i])) {
@@ -521,7 +533,6 @@ static inline void process_compression(const struct limiter_v2_data *cd, float *
 		}
 	}
 }
-
 
 /* -------------------------------------------------------- */
 /* OBS Filter API                                           */
@@ -581,10 +592,11 @@ static bool preset_modified_callback(obs_properties_t *props, obs_property_t *p,
 	UNUSED_PARAMETER(props);
 	UNUSED_PARAMETER(p);
 
-	const char* selected_preset = obs_data_get_string(s, S_PRESET);
+	const char *selected_preset = obs_data_get_string(s, S_PRESET);
 	blog(LOG_INFO, "[limiter v2] Preset selected: %s", selected_preset ? selected_preset : "(null / custom)");
 
-	if (!selected_preset) return true;
+	if (!selected_preset)
+		return true;
 
 	if (strcmp(selected_preset, PRESET_VAL_DEFAULT) == 0) {
 		obs_data_set_double(s, S_FILTER_THRESHOLD, DEFAULT_THRESHOLD_DB);
@@ -664,7 +676,7 @@ static bool parameter_modified_callback(obs_properties_t *props, obs_property_t 
 {
 	UNUSED_PARAMETER(props);
 	UNUSED_PARAMETER(p);
-	const char* current_preset = obs_data_get_string(s, S_PRESET);
+	const char *current_preset = obs_data_get_string(s, S_PRESET);
 	if (current_preset && strcmp(current_preset, PRESET_VAL_CUSTOM) != 0) {
 		blog(LOG_DEBUG, "[limiter v2] Manual parameter change detected, setting preset to Custom.");
 		obs_data_set_string(s, S_PRESET, PRESET_VAL_CUSTOM);
@@ -728,8 +740,8 @@ static obs_properties_t *limiter_v2_properties(void *data)
 	obs_properties_set_flags(props, OBS_PROPERTIES_DEFER_UPDATE);
 
 	// --- Presets Dropdown ---
-	obs_property_t *preset_list = obs_properties_add_list(props, S_PRESET, TEXT_PRESET,
-	                                                     OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
+	obs_property_t *preset_list =
+		obs_properties_add_list(props, S_PRESET, TEXT_PRESET, OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING);
 	if (preset_list) {
 		obs_property_list_add_string(preset_list, TEXT_PRESET_CUSTOM, PRESET_VAL_CUSTOM);
 		obs_property_list_add_string(preset_list, TEXT_PRESET_DEFAULT, PRESET_VAL_DEFAULT);
@@ -748,40 +760,40 @@ static obs_properties_t *limiter_v2_properties(void *data)
 	// --- Individual Parameter Controls ---
 	obs_property_t *p;
 
-	p = obs_properties_add_float_slider(props, S_FILTER_THRESHOLD, TEXT_THRESHOLD,
-					    MIN_THRESHOLD_DB, MAX_THRESHOLD_DB, 0.1);
+	p = obs_properties_add_float_slider(props, S_FILTER_THRESHOLD, TEXT_THRESHOLD, MIN_THRESHOLD_DB,
+					    MAX_THRESHOLD_DB, 0.1);
 	obs_property_float_set_suffix(p, " dB");
 	obs_property_set_modified_callback(p, parameter_modified_callback);
 
-	p = obs_properties_add_float_slider(props, S_RELEASE_TIME, TEXT_RELEASE_TIME,
-					  MIN_RELEASE_MS, MAX_RELEASE_MS, 1.0);
+	p = obs_properties_add_float_slider(props, S_RELEASE_TIME, TEXT_RELEASE_TIME, MIN_RELEASE_MS, MAX_RELEASE_MS,
+					    1.0);
 	obs_property_float_set_suffix(p, " ms");
 	obs_property_set_long_description(p, TEXT_RELEASE_TIME_DESC);
 	obs_property_set_modified_callback(p, parameter_modified_callback);
 
-	p = obs_properties_add_float_slider(props, S_OUTPUT_GAIN, TEXT_OUTPUT_GAIN,
-					    MIN_OUTPUT_GAIN_DB, MAX_OUTPUT_GAIN_DB, 0.1);
+	p = obs_properties_add_float_slider(props, S_OUTPUT_GAIN, TEXT_OUTPUT_GAIN, MIN_OUTPUT_GAIN_DB,
+					    MAX_OUTPUT_GAIN_DB, 0.1);
 	obs_property_float_set_suffix(p, " dB");
 	obs_property_set_modified_callback(p, parameter_modified_callback);
 
 	p = obs_properties_add_bool(props, S_LOOKAHEAD_ENABLED, TEXT_LOOKAHEAD_ENABLED);
-	obs_property_t* lookahead_toggle = p; // Save pointer for visibility logic
+	obs_property_t *lookahead_toggle = p; // Save pointer for visibility logic
 	obs_property_set_modified_callback(p, lookahead_enabled_modified_callback);
 
-	p = obs_properties_add_float_slider(props, S_LOOKAHEAD_TIME_MS, TEXT_LOOKAHEAD_TIME_MS,
-					    MIN_LOOKAHEAD_MS, MAX_LOOKAHEAD_MS, 0.1);
+	p = obs_properties_add_float_slider(props, S_LOOKAHEAD_TIME_MS, TEXT_LOOKAHEAD_TIME_MS, MIN_LOOKAHEAD_MS,
+					    MAX_LOOKAHEAD_MS, 0.1);
 	obs_property_float_set_suffix(p, " ms");
 	obs_property_set_long_description(p, TEXT_LOOKAHEAD_TIME_MS_DESC);
-    obs_property_set_visible(p, cd ? cd->lookahead_enabled : DEFAULT_LOOKAHEAD_ENABLED);
-    obs_property_set_modified_callback(p, parameter_modified_callback);
+	obs_property_set_visible(p, cd ? cd->lookahead_enabled : DEFAULT_LOOKAHEAD_ENABLED);
+	obs_property_set_modified_callback(p, parameter_modified_callback);
 
 	p = obs_properties_add_bool(props, S_ADAPTIVE_RELEASE_ENABLED, TEXT_ADAPTIVE_RELEASE_ENABLED);
 	obs_property_set_long_description(p, TEXT_ADAPTIVE_RELEASE_DESC);
 	obs_property_set_modified_callback(p, parameter_modified_callback);
 
 	p = obs_properties_add_bool(props, S_TRUE_PEAK_ENABLED, TEXT_TRUE_PEAK_ENABLED);
-    obs_property_set_long_description(p, TEXT_TRUE_PEAK_DESC);
-    obs_property_set_modified_callback(p, parameter_modified_callback);
+	obs_property_set_long_description(p, TEXT_TRUE_PEAK_DESC);
+	obs_property_set_modified_callback(p, parameter_modified_callback);
 
 	if (!lookahead_toggle) {
 		blog(LOG_WARNING, "[limiter v2] Could not get lookahead toggle property for dynamic UI setup");
@@ -789,7 +801,6 @@ static obs_properties_t *limiter_v2_properties(void *data)
 
 	return props;
 }
-
 
 /**
  * @brief Updates limiter parameters and state when settings change
@@ -808,7 +819,8 @@ static obs_properties_t *limiter_v2_properties(void *data)
 static void limiter_v2_update(void *data, obs_data_t *s)
 {
 	struct limiter_v2_data *cd = data;
-	if (!cd) return;
+	if (!cd)
+		return;
 
 	const uint32_t sample_rate = audio_output_get_sample_rate(obs_get_audio());
 	size_t num_channels = audio_output_get_channels(obs_get_audio());
@@ -819,7 +831,8 @@ static void limiter_v2_update(void *data, obs_data_t *s)
 	}
 	uint32_t current_sample_rate = sample_rate;
 	if (num_channels == 0 || current_sample_rate == 0) {
-		warn("Invalid audio parameters (Channels: %zu, Sample Rate: %u). Limiter fallback to default SR if unavailable.", num_channels, current_sample_rate);
+		warn("Invalid audio parameters (Channels: %zu, Sample Rate: %u). Limiter fallback to default SR if unavailable.",
+		     num_channels, current_sample_rate);
 		if (current_sample_rate == 0) {
 			current_sample_rate = 48000;
 			warn("Sample rate was 0, fallback to default %uHz.", current_sample_rate);
@@ -828,8 +841,8 @@ static void limiter_v2_update(void *data, obs_data_t *s)
 
 	bool reset_lookahead = false;
 	if (cd->sample_rate != current_sample_rate || cd->num_channels != num_channels) {
-		info("Audio parameters changed (SR: %u->%u, Ch: %zu->%zu), resetting state.",
-		     cd->sample_rate, current_sample_rate, cd->num_channels, num_channels);
+		info("Audio parameters changed (SR: %u->%u, Ch: %zu->%zu), resetting state.", cd->sample_rate,
+		     current_sample_rate, cd->num_channels, num_channels);
 		cd->sample_rate = current_sample_rate;
 		cd->num_channels = num_channels;
 		reset_lookahead = true;
@@ -849,13 +862,12 @@ static void limiter_v2_update(void *data, obs_data_t *s)
 
 	new_lookahead_time_ms = fmaxf(0.0f, fminf(MAX_LOOKAHEAD_MS, new_lookahead_time_ms));
 	if (new_lookahead_enabled && new_lookahead_time_ms < MIN_LOOKAHEAD_MS) {
-		 new_lookahead_time_ms = MIN_LOOKAHEAD_MS;
+		new_lookahead_time_ms = MIN_LOOKAHEAD_MS;
 	} else if (!new_lookahead_enabled) {
 		new_lookahead_time_ms = 0.0f;
 	}
 
-	if (new_lookahead_enabled != cd->lookahead_enabled ||
-	    new_lookahead_time_ms != cd->lookahead_time_ms) {
+	if (new_lookahead_enabled != cd->lookahead_enabled || new_lookahead_time_ms != cd->lookahead_time_ms) {
 		reset_lookahead = true;
 		cd->lookahead_enabled = new_lookahead_enabled;
 		cd->lookahead_time_ms = new_lookahead_time_ms;
@@ -868,9 +880,11 @@ static void limiter_v2_update(void *data, obs_data_t *s)
 
 	if (reset_lookahead) {
 		size_t new_lookahead_samples = 0;
-		if (cd->lookahead_enabled && cd->lookahead_time_ms >= MIN_LOOKAHEAD_MS && cd->sample_rate > 0 && cd->num_channels > 0) {
+		if (cd->lookahead_enabled && cd->lookahead_time_ms >= MIN_LOOKAHEAD_MS && cd->sample_rate > 0 &&
+		    cd->num_channels > 0) {
 			new_lookahead_samples = (size_t)((cd->sample_rate * cd->lookahead_time_ms) / MS_IN_S_F + 0.5f);
-			if (new_lookahead_samples == 0) new_lookahead_samples = 1;
+			if (new_lookahead_samples == 0)
+				new_lookahead_samples = 1;
 		}
 		cd->lookahead_samples = new_lookahead_samples;
 
@@ -882,18 +896,20 @@ static void limiter_v2_update(void *data, obs_data_t *s)
 	}
 
 	uint64_t latency_ns = 0;
-	if (cd->lookahead_enabled && cd->lookahead_buffers_initialized && cd->lookahead_samples > 0 && cd->sample_rate > 0) {
+	if (cd->lookahead_enabled && cd->lookahead_buffers_initialized && cd->lookahead_samples > 0 &&
+	    cd->sample_rate > 0) {
 		latency_ns = (uint64_t)(((double)cd->lookahead_samples / cd->sample_rate) * 1.0e9);
 	}
 	obs_source_set_audio_latency(cd->context, latency_ns);
 
 	if (!cd->envelope_buf) {
 		size_t initial_env_len = (cd->sample_rate * INITIAL_ENV_BUF_MS) / MS_IN_S;
-		if (initial_env_len == 0) initial_env_len = 1024;
+		if (initial_env_len == 0)
+			initial_env_len = 1024;
 		ensure_env_buffer(cd, initial_env_len);
 		if (cd->envelope_buf) {
-             memset(cd->envelope_buf, 0, cd->envelope_buf_len * sizeof(float));
-        }
+			memset(cd->envelope_buf, 0, cd->envelope_buf_len * sizeof(float));
+		}
 	}
 }
 
@@ -939,7 +955,8 @@ static void *limiter_v2_create(obs_data_t *settings, obs_source_t *filter)
 static void limiter_v2_destroy(void *data)
 {
 	struct limiter_v2_data *cd = data;
-	if (!cd) return;
+	if (!cd)
+		return;
 
 	debug("Destroying limiter v2 filter");
 
@@ -955,7 +972,6 @@ static void limiter_v2_destroy(void *data)
 	bfree(cd);
 	// cd = NULL; // Optional defensive programming
 }
-
 
 /**
  * @brief The main audio processing callback for the limiter
@@ -988,11 +1004,14 @@ static struct obs_audio_data *limiter_v2_filter_audio(void *data, struct obs_aud
 	// --- 2. Apply Lookahead Delay (Main Path Delay) ---
 	if (lookahead_active) {
 		for (size_t c = 0; c < cd->num_channels; ++c) {
-			if (c >= MAX_AUDIO_CHANNELS || !samples[c]) continue;
+			if (c >= MAX_AUDIO_CHANNELS || !samples[c])
+				continue;
 			// Safety check buffer before use
 			if (cd->lookahead_circbuf[c].size == 0 && cd->lookahead_circbuf[c].capacity == 0) {
-				warn("Lookahead buffer for channel %zu not initialized, skipping lookahead for block.", c);
-				lookahead_active = false; break;
+				warn("Lookahead buffer for channel %zu not initialized, skipping lookahead for block.",
+				     c);
+				lookahead_active = false;
+				break;
 			}
 			circlebuf_push_back(&cd->lookahead_circbuf[c], samples[c], num_samples * sample_size);
 			circlebuf_pop_front(&cd->lookahead_circbuf[c], samples[c], num_samples * sample_size);
@@ -1004,7 +1023,6 @@ static struct obs_audio_data *limiter_v2_filter_audio(void *data, struct obs_aud
 
 	return audio;
 }
-
 
 /* -------------------------------------------------------- */
 /* Filter Definition                                        */
@@ -1023,14 +1041,14 @@ static struct obs_audio_data *limiter_v2_filter_audio(void *data, struct obs_aud
  * filter available in the OBS user interface.
  */
 struct obs_source_info limiter_v2_filter = {
-	.id             = "limiter_v2_filter", // Unique ID
-	.type           = OBS_SOURCE_TYPE_FILTER,
-	.output_flags   = OBS_SOURCE_AUDIO, // Outputs audio
-	.get_name       = limiter_v2_name,
-	.create         = limiter_v2_create,
-	.destroy        = limiter_v2_destroy,
-	.update         = limiter_v2_update,
-	.filter_audio   = limiter_v2_filter_audio,
-	.get_defaults   = limiter_v2_defaults,
+	.id = "limiter_v2_filter", // Unique ID
+	.type = OBS_SOURCE_TYPE_FILTER,
+	.output_flags = OBS_SOURCE_AUDIO, // Outputs audio
+	.get_name = limiter_v2_name,
+	.create = limiter_v2_create,
+	.destroy = limiter_v2_destroy,
+	.update = limiter_v2_update,
+	.filter_audio = limiter_v2_filter_audio,
+	.get_defaults = limiter_v2_defaults,
 	.get_properties = limiter_v2_properties,
 };

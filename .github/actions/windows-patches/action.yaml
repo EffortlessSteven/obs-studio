@@ -17,6 +17,10 @@ inputs:
     description: Update channel
     required: false
     default: 'stable'
+  architecture:
+    description: OBS build architecture
+    required: false
+    default: 'x64'
 
 runs:
   using: composite
@@ -34,9 +38,9 @@ runs:
       run: |
         # Download OBS release
         . ${env:GITHUB_ACTION_PATH}\Invoke-External.ps1
-        Invoke-External gh release download "${{ inputs.tagName }}" -p "OBS-Studio-${{ inputs.tagName }}-Windows.zip"
-        Invoke-External gh attestation verify "OBS-Studio-${{ inputs.tagName }}-Windows.zip" --owner obsproject
-        Expand-Archive -Path "OBS-Studio-${{ inputs.tagName }}-Windows.zip" -DestinationPath "${{ github.workspace }}/build"
+        Invoke-External gh release download "${{ inputs.tagName }}" -p "OBS-Studio-${{ inputs.tagName }}-Windows-${{ inputs.architecture }}.zip"
+        Invoke-External gh attestation verify "OBS-Studio-${{ inputs.tagName }}-Windows-${{ inputs.architecture }}.zip" --owner obsproject
+        Expand-Archive -Path "OBS-Studio-${{ inputs.tagName }}-Windows-${{ inputs.architecture }}.zip" -DestinationPath "${{ github.workspace }}/build"
 
     - name: Setup bouf
       shell: pwsh
@@ -80,7 +84,7 @@ runs:
         RCLONE_S3_SECRET_ACCESS_KEY: '${{ inputs.gcsAccessKeySecret }}'
         RCLONE_S3_ENDPOINT: 'https://storage.googleapis.com'
       run: |
-        rclone -q copy ":s3:obs-builds" "${{ github.workspace }}/old_builds"
+        rclone -q copy ":s3:obs-builds/${{ inputs.architecture }}" "${{ github.workspace }}/old_builds"
 
     - name: Prepare Release Notes
       shell: pwsh
@@ -109,7 +113,7 @@ runs:
         Invoke-External "${{ github.workspace }}\bouf\bin\bouf.exe" @boufArgs
 
     - name: Upload Outputs
-      uses: actions/upload-artifact@v4.3.5
+      uses: actions/upload-artifact@v4
       with:
         name: windows-updater-files
         compression-level: 0
