@@ -34,7 +34,7 @@
 #include <media-io/audio-math.h> // For db_to_mul, mul_to_db
 #include <util/platform.h>
 #include <util/bmem.h>      // For bzalloc, brealloc, bfree
-#include <util/circlebuf.h> // For circular buffer implementation
+#include <util/deque.h> // For circular buffer implementation
 
 /* Prevent compiler warnings for unused parameters */
 #ifndef UNUSED_PARAMETER
@@ -196,7 +196,7 @@ struct limiter_v2_data {
 	float envelope; // Last envelope value
 
 	// Lookahead State
-	struct circlebuf lookahead_circbuf[MAX_AUDIO_CHANNELS];
+	struct deque lookahead_circbuf[MAX_AUDIO_CHANNELS];
 	size_t lookahead_samples;
 	bool lookahead_buffers_initialized;
 
@@ -309,7 +309,7 @@ static bool update_lookahead_buffers(struct limiter_v2_data *cd)
 	if (cd->lookahead_buffers_initialized) {
 		for (size_t i = 0; i < cd->num_channels; ++i) {
 			if (i < MAX_AUDIO_CHANNELS) {
-				circlebuf_free(&cd->lookahead_circbuf[i]);
+				deque_free(&cd->lookahead_circbuf[i]);
 			}
 		}
 		cd->lookahead_buffers_initialized = false;
@@ -323,7 +323,7 @@ static bool update_lookahead_buffers(struct limiter_v2_data *cd)
 
 	debug("Initializing lookahead buffers for %zu samples, %zu channels.", cd->lookahead_samples, cd->num_channels);
 
-	size_t block_estimate = (cd->sample_rate * INITIAL_ENV_BUF_MS / MS_IN_S_F) + 1;
+	size_t block_estimate = ((size_t)cd->sample_rate * INITIAL_ENV_BUF_MS / MS_IN_S) + 1;
 	if (block_estimate == 0)
 		block_estimate = 1024;
 	size_t required_capacity_samples = cd->lookahead_samples + block_estimate;
@@ -348,19 +348,19 @@ static bool update_lookahead_buffers(struct limiter_v2_data *cd)
 			break;
 		}
 
-		memset(&cd->lookahead_circbuf[i], 0, sizeof(struct circlebuf));
-		circlebuf_reserve(&cd->lookahead_circbuf[i], required_capacity_bytes);
+		memset(&cd->lookahead_circbuf[i], 0, sizeof(struct deque));
+		deque_reserve(&cd->lookahead_circbuf[i], required_capacity_bytes);
 
 		if (cd->lookahead_circbuf[i].capacity < required_capacity_bytes) {
 			warn("Failed to reserve sufficient capacity (%zu bytes) for lookahead buffer channel %zu.",
 			     required_capacity_bytes, i);
-			circlebuf_free(&cd->lookahead_circbuf[i]);
+			deque_free(&cd->lookahead_circbuf[i]);
 			success = false;
 			break;
 		}
 
 		if (zero_block && init_zeros_size_bytes > 0) {
-			circlebuf_push_back(&cd->lookahead_circbuf[i], zero_block, init_zeros_size_bytes);
+			deque_push_back(&cd->lookahead_circbuf[i], zero_block, init_zeros_size_bytes);
 		}
 	}
 
@@ -370,7 +370,7 @@ static bool update_lookahead_buffers(struct limiter_v2_data *cd)
 		warn("Lookahead buffer initialization failed. Cleaning up.");
 		for (size_t i = 0; i < cd->num_channels; ++i) {
 			if (i < MAX_AUDIO_CHANNELS) {
-				circlebuf_free(&cd->lookahead_circbuf[i]);
+				deque_free(&cd->lookahead_circbuf[i]);
 			}
 		}
 		cd->lookahead_buffers_initialized = false;
@@ -954,7 +954,7 @@ static void limiter_v2_destroy(void *data)
 	if (cd->lookahead_buffers_initialized) {
 		for (size_t i = 0; i < cd->num_channels; ++i) {
 			if (i < MAX_AUDIO_CHANNELS) {
-				circlebuf_free(&cd->lookahead_circbuf[i]);
+				deque_free(&cd->lookahead_circbuf[i]);
 			}
 		}
 	}
@@ -1004,8 +1004,8 @@ static struct obs_audio_data *limiter_v2_filter_audio(void *data, struct obs_aud
 				lookahead_active = false;
 				break;
 			}
-			circlebuf_push_back(&cd->lookahead_circbuf[c], samples[c], num_samples * sample_size);
-			circlebuf_pop_front(&cd->lookahead_circbuf[c], samples[c], num_samples * sample_size);
+			deque_push_back(&cd->lookahead_circbuf[c], samples[c], num_samples * sample_size);
+			deque_pop_front(&cd->lookahead_circbuf[c], samples[c], num_samples * sample_size);
 		}
 	}
 
